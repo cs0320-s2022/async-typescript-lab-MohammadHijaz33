@@ -1,27 +1,44 @@
 // TODO: select the list element where the suggestions should go, and all three dropdown elements
 //  HINT: look at the HTML
-
+let suggestionList = document.getElementById("suggestions") as HTMLUListElement;
+let sun = document.querySelector('#sun') as HTMLInputElement
+let moon = document.querySelector('#moon') as HTMLInputElement
+let rising = document.querySelector('#rising') as HTMLInputElement
 // Here, when the value of sun is changed, we will call the method postAndUpdate.
+sun.addEventListener('input', () => postAndUpdate());
+moon.addEventListener('input', () => postAndUpdate());
+rising.addEventListener('input', () => postAndUpdate());
 // TODO: Do the same for moon and rising
 
 // TODO: Define a type for the request data object here.
-// type MatchesRequestData = {}
+type MatchesRequestData = {
+  sun : String,
+  moon : String,
+  rising : String
+}
 
 // TODO: Define a type for the response data object here.
-// type Matches = {}
-
+type Matches = {
+  matchesList: string[]
+}
 function postAndUpdate(): void {
+  suggestionList.innerHTML = "";
   // TODO: empty the suggestionList (you want new suggestions each time someone types something new)
   //  HINT: use .innerHTML
-
   // TODO: add a type annotation to make this of type MatchesRequestData
-  const postParameters = {
-    // TODO: get the text inside the input box
-    //  HINT: use sun.value to get the value of the sun field, for example
+  const postParameters: MatchesRequestData = {
+    sun: sun.value,
+    moon: moon.value,
+    rising: rising.value
   };
-
-  console.log(postParameters)
-
+  fetch("http://localhost:4567/matchresults", {
+    method: "POST",
+    body: JSON.stringify(postParameters),
+    headers: {
+      "Content-Type": "application/json",
+      "Access-Control-Allow-Origin": "*"
+    }
+  }).then(repsone => repsone.json()).then((data : Matches) => updateSuggestions(data.matchesList));
   // TODO: make a POST request using fetch to the URL to handle this request you set in your Main.java
   //  HINT: check out the POST REQUESTS section of the lab and of the front-end guide.
   //  Make sure you add "Access-Control-Allow-Origin":"*" to your headers.
@@ -33,13 +50,22 @@ function postAndUpdate(): void {
 }
 
 function updateSuggestions(matches: string[]): void {
+  console.log("matches+"); console.log(matches);
+  matches.forEach((match : string) => {
+    suggestionList.innerHTML += `<li tabindex="0">` + match + "</li>";
+  })
   // TODO: for each element in the set of matches, append it to the suggestionList
   //  HINT: use innerHTML += to append to the suggestions list
   //  NOTE: you should use <li> (list item) tags to wrap each element. When you do so,
   //  make sure to add the attribute 'tabindex="0"' (for example: <li tabindex="0">{your element}</li>).
   //  This makes each element selectable via screen reader.
 }
-
+document.addEventListener("keyup", async (  e) => {
+  if (e.key == "r") {
+    await updateValues("Cancer", "Leo", "Aries");
+    postAndUpdate();
+  }
+});
 // TODO: create an event listener to the document (document.addEventListener) that detects "keyup".
 //  When a certain key of your choice is clicked, reset the values of sun, moon, and rising to your own
 //  values for the sun, moon, and rising using updateValues. Then call postAndUpdate().
